@@ -1,12 +1,9 @@
 ---
 id: TC-DA-0000
 title: "API: Title of the test case"
-type: API
 priority: Low | Medium | High
-area: "api/entry-point"
-component: ""
-related-ticket: ""
 status: Active | Blocked | Closed 
+type: smoke | regression | functional | performance | security
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
