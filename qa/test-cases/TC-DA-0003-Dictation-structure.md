@@ -11,22 +11,22 @@ updated: 2026-03-23
 # TC-DA-0003 — API: Validate individual dictation (dic.json) structure
 
 ## Objective
-For every dictation listed in the `dics` array of `index.json`, fetch the resource at `dics[i].path` (`dic.json`) and verify that its structure matches the expected schema.
+For every dictation listed in the `dics` array of `index.json`, fetch `dic.json` at `base_url + dics[i].id + /dic.json` and verify that its structure matches the expected schema.
 
 ## Preconditions
 - TC-DA-0001 passes (entry point is reachable and returns valid JSON).
-- TC-DA-0002 passes (`index.json` has a valid `dics` array with at least one item, each containing a `path` field).
+- TC-DA-0002 passes (`index.json` has a valid `dics` array with at least one item, each containing an `id` field).
 
 ## Test Data
 - **Index URL:** `https://leva13007.github.io/dictations/dics/index.json`
-- **Dictation URL pattern:** value of `dics[i].path` for each item in the array
+- **Dictation URL pattern:** `base_url + dics[i].id + /dic.json` for each item in the array
 
 ## Steps and Expected Results
 
 | Step | Action | Expected Result |
 |------|----------------------------------------------------------------|-----------------|
 | 1    | Fetch `index.json` and parse the `dics` array                  | `dics` is a non-empty array |
-| 2    | For each item in `dics`, send a GET request to `dics[i].path`  | Response status code is `200` |
+| 2    | For each item in `dics`, send a GET request to `base_url + dics[i].id + /dic.json`  | Response status code is `200` |
 | 3    | Parse the response body as JSON                                | Response is a valid JSON object |
 | 4    | Check field `id`                                               | Value is a string |
 | 5    | Check field `title`                                            | Value is a string |

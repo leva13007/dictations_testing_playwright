@@ -30,7 +30,6 @@ Verify that `index.json` returned by the API entry point conforms to the expecte
 | 7    | Check top-level field `updated_at`                   | Value is a date string |
 | 8    | Check top-level field `dics`                         | Value is a non-empty array |
 | 9    | For every item in `dics`, verify `id`                | Value is a string |
-| 10   | For every item in `dics`, verify `path`              | Value is a string |
 | 11   | For every item in `dics`, verify `title`             | Value is a string |
 | 12   | For every item in `dics`, verify `level`             | Value is a string |
 | 13   | For every item in `dics`, verify `sentences`         | Value is a number |
