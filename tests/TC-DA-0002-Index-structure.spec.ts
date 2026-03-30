@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, APIResponse } from "@playwright/test";
 
 const FILE_NAME = "index.json";
 
@@ -22,6 +22,7 @@ type Body = {
   "dics": Dic[]
 }
 
+// TODO: pass type as a generic type
 test.describe(`TC-DA-0002 — API: Open Entry Point and fetch ${FILE_NAME}`, () => {
   test("GET entry point returns status 200 and valid JSON", async ({
     request,
