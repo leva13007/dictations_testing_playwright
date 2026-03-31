@@ -11,6 +11,7 @@ export type Dic = {
 };
 
 export type IndexBody = {
+  url: string;
   language: string;
   repository?: string;
   created_at: string;

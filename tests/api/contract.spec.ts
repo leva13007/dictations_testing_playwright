@@ -17,7 +17,10 @@ test.beforeAll(async ({ request }) => {
 });
 
 test.describe("Contract — index.json structure", () => {
-  test("TC-DA-0002: index.json top-level fields and dics items have valid schema", async () => {
+  test("TC-DA-0002: index.json top-level fields and dics items have valid schema", async ({ baseURL }) => {
+    expect(typeof indexBody.url === "string" && indexBody.url.startsWith("https://")).toBeTruthy();
+    const expected = baseURL!.replace(/\/+$/, "");
+    expect(indexBody.url, `url field should match baseURL`).toBe(expected);
     expect(typeof indexBody.language === "string" && indexBody.language.length > 0).toBeTruthy();
     indexBody.repository && expect(typeof indexBody.repository === "string").toBeTruthy();
     expect(new Date(indexBody.created_at.toString())).not.toBe("Invalid Date");

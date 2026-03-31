@@ -24,7 +24,8 @@ Verify that `index.json` returned by the API entry point conforms to the expecte
 | Step | Action | Expected Result |
 |------|------------------------------------------------------|-----------------|
 | 1    | Send a GET request to `https://leva13007.github.io/dictations/dics/index.json` and parse the response as JSON | Response is a valid JSON object |
-| 2    | Check top-level field `language`                     | Value is a non-empty string |
+| 2    | Check top-level field `url`                           | Value is a string starting with `https://` (base URL of the API) |
+| 3    | Check top-level field `language`                     | Value is a non-empty string |
 | 5    | Check top-level field `repository`                   | Value is a string, field not required |
 | 6    | Check top-level field `created_at`                   | Value is a date string |
 | 7    | Check top-level field `updated_at`                   | Value is a date string |
