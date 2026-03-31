@@ -5,15 +5,16 @@ priority: High
 status: Active
 type: functional
 created: 2026-03-23
-updated: 2026-03-23
+updated: 2026-03-31
 ---
 
 # TC-DA-0005 — API: Sentence count and duration consistency between dic.json and playlist.json
 
 ## Objective
 For every dictation, verify that `dic.json` metadata is consistent with the actual `playlist.json` data:
-1. The `sentences` field in `dic.json` equals the number of items in `playlist.json`.
-2. The `duration_sec` field in `dic.json` equals the sum of all `duration_sec` values in `playlist.json`.
+1. Every `duration_sec` value (in `dic.json` and each `playlist.json` item) is strictly positive (> 0).
+2. The `sentences` field in `dic.json` equals the number of items in `playlist.json`.
+3. The `duration_sec` field in `dic.json` equals the sum of all `duration_sec` values in `playlist.json`.
 
 ## Preconditions
 - TC-DA-0003 passes (`dic.json` is fetchable and has valid `sentences` and `duration_sec` fields).
@@ -30,15 +31,20 @@ For every dictation, verify that `dic.json` metadata is consistent with the actu
 |------|----------------------------------------------------------------|-----------------|
 | 1    | Fetch `index.json` and parse the `dics` array                  | `dics` is a non-empty array |
 | 2    | For each dictation, fetch `dic.json` and `playlist.json`       | Both responses return status `200` and valid JSON |
-| 3    | Compare `dic.json.sentences` with `playlist.json.length`       | Values are equal |
-| 4    | Sum all `duration_sec` values from `playlist.json` items        | Sum is computed |
-| 5    | Compare `dic.json.duration_sec` with the computed sum           | Values are equal |
+| 3    | For each item in `playlist.json`, check `duration_sec`          | Value is a number greater than 0 |
+| 4    | Check `dic.json.duration_sec`                                   | Value is a number greater than 0 |
+| 5    | Compare `dic.json.sentences` with `playlist.json.length`       | Values are equal |
+| 6    | Sum all `duration_sec` values from `playlist.json` items        | Sum is computed |
+| 7    | Compare `dic.json.duration_sec` with the computed sum           | Values are equal |
 
 ## Screenshots / Attachments (optional)
 
 ## Edge Cases
+- `duration_sec` is `0` in any playlist item or `dic.json` → test should fail.
+- `duration_sec` is negative → test should fail.
 
 ## Notes
+- Duration positivity (> 0) is validated here alongside consistency to avoid redundant fetching of the same resources.
 
 ## Related
 - TC-DA-0003 — API: Validate individual dictation (dic.json) structure
