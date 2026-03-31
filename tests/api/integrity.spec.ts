@@ -1,28 +1,24 @@
 import { test, expect } from "@playwright/test";
+import { DictationAPI } from "../utils/api-client";
+import type { Dic } from "../utils/types";
 
 /**
  * Integrity tests — verify cross-resource consistency.
  * Data in one file must match data in another.
  */
 
-type Dic = { id: string; title: string; level: string; sentences: number; duration_sec: number; tags: any; features: any };
-
 let dics: Dic[];
 
 test.beforeAll(async ({ request }) => {
-  const res = await request.get("index.json");
-  expect(res.status()).toBe(200);
-  const body = await res.json();
-  dics = body.dics;
-  expect(Array.isArray(dics) && dics.length > 0).toBeTruthy();
+  const api = new DictationAPI(request);
+  dics = await api.getDics();
 });
 
 test.describe("Integrity — index ↔ dic.json", () => {
   test("TC-DA-0008: Shared fields between index.json items and dic.json are identical", async ({ request }) => {
+    const api = new DictationAPI(request);
     for (const item of dics) {
-      const res = await request.get(`${item.id}/dic.json`);
-      expect(res.status(), `dic.json for ${item.id}`).toBe(200);
-      const dic = await res.json();
+      const dic = await api.getDicJson(item.id);
 
       expect(dic.id, `${item.id}: id mismatch`).toBe(item.id);
       expect(dic.title, `${item.id}: title mismatch`).toBe(item.title);
@@ -37,16 +33,12 @@ test.describe("Integrity — index ↔ dic.json", () => {
 
 test.describe("Integrity — dic.json ↔ playlist.json", () => {
   test("TC-DA-0005: Sentence count, duration consistency, all durations > 0", async ({ request }) => {
+    const api = new DictationAPI(request);
     for (const item of dics) {
-      const [dicRes, plRes] = await Promise.all([
-        request.get(`${item.id}/dic.json`),
-        request.get(`${item.id}/playlist.json`),
+      const [dic, playlist] = await Promise.all([
+        api.getDicJson(item.id),
+        api.getPlaylist(item.id),
       ]);
-      expect(dicRes.status(), `dic.json for ${item.id}`).toBe(200);
-      expect(plRes.status(), `playlist.json for ${item.id}`).toBe(200);
-
-      const dic = await dicRes.json();
-      const playlist: { duration_sec: number }[] = await plRes.json();
 
       for (let j = 0; j < playlist.length; j++) {
         expect(
