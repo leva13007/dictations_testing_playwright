@@ -31,8 +31,9 @@ For every dictation, verify that `dic.json` metadata is consistent with the actu
 | 1    | Fetch `index.json` and parse the `dics` array                  | `dics` is a non-empty array |
 | 2    | For each dictation, fetch `dic.json` and `playlist.json`       | Both responses return status `200` and valid JSON |
 | 3    | Compare `dic.json.sentences` with `playlist.json.length`       | Values are equal |
-| 4    | Sum all `duration_sec` values from `playlist.json` items        | Sum is computed |
-| 5    | Compare `dic.json.duration_sec` with the computed sum           | Values are equal |
+| 4    | Each `duration_sec` values should be greater than or equal to 0 | Values are valid |
+| 5    | Sum all `duration_sec` values from `playlist.json` items        | Sum is computed |
+| 6    | Compare `dic.json.duration_sec` with the computed sum           | Values are equal |
 
 ## Screenshots / Attachments (optional)
 

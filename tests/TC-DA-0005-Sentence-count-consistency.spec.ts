@@ -51,28 +51,32 @@ type Playlist = {
 
 type PlaylistJSON = Playlist[];
 
-
-test.describe("TC-DA-0004 — API: Validate playlist.json structure for each dictation", () => {
-  test("Each playlist.json is a valid non-empty array with correct item schema", async ({request}) => {
+test.describe("TC-DA-0005 — API: Sentence count and duration consistency between dic.json and playlist.json", () => {
+  test("dic.json sentence/diration match playlist.jsno data, all durations > 0", async ({request}) => {
     // Step 1: Send GET request to the entry point URL
     const response = await request.get(FILE_NAME);
 
     // Step 2: Parse the response body as JSON
     const { dics } = await response.json() as Body;
     for (const item of dics){
-      const res = await request.get(`${item.id}/playlist.json`);
-      expect(res.status()).toBe(200);
+      const resDic = await request.get(`${item.id}/dic.json`);
+      const resPlaylist = await request.get(`${item.id}/playlist.json`);
 
-      const playlist = await res.json() as PlaylistJSON;
-      expect(Array.isArray(playlist), `${item.id}: playlist should be an array`).toBeTruthy();
-      expect(playlist.length > 0, `${item.id}: playlist should not be empty`).toBeTruthy();
+      expect(resDic.status()).toBe(200);
+      expect(resPlaylist.status()).toBe(200);
 
+      const dic = await resDic.json() as DicJSON;
+      const playlist = await resPlaylist.json() as PlaylistJSON;
+
+      expect(dic.sentences === playlist.length, `${item.id}: sentence count mistmach`).toBeTruthy();
+
+      let sumDuration = 0;
       for(const entry of playlist){
-        expect(typeof entry.id, `${entry.id}: entry.id should be a nuber`).toBe('number');
-        expect(typeof entry.text, `${entry.text}: entry.text should be a string`).toBe('string');
-        expect(typeof entry.audio, `${entry.audio}: entry.audio should be a string`).toBe('string');
-        expect(typeof entry.duration_sec, `${entry.duration_sec}: entry.duration_sec should be a number`).toBe('number');
+        expect(entry.duration_sec, `${item.id} | ${entry.duration_sec}: entry.duration_sec should be greater than 0`).toBeGreaterThan(0);
+        sumDuration += entry.duration_sec;
       }
+      expect(sumDuration > 0, `${item.id}: duration_sec sum should be computed`).toBeTruthy();
+      expect(sumDuration, `${item.id}: duration_sec sum mistmach`).toBeCloseTo(dic.duration_sec, 1);
     }
   });
 });
