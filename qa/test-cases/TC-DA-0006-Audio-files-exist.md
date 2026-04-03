@@ -32,7 +32,7 @@ For every dictation listed in the `dics` array of `index.json`, fetch `playlist.
 | 2    | For each dictation, send a GET request to `base_url + dics[i].id + /playlist.json` | Response status code is `200` and body is a valid JSON array |
 | 3    | For each item in the playlist array, extract the `audio` field  | `audio` is a non-empty string |
 | 4    | Send a HEAD/GET request to `base_url + dics[i].id + /sounds/ + audio` | Response status code is `200` |
-| 5    | Verify the response `Content-Type` header                       | Value contains `audio/` (e.g. `audio/mpeg`) |
+| 5    | Verify the response `Content-Type` header                       | Value is `audio/mp3` |
 
 ## Screenshots / Attachments (optional)
 
