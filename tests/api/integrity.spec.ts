@@ -1,34 +1,29 @@
-import { test, expect } from "@playwright/test";
-import { INDEX_FILE } from "./constants";
-import { Body, Dic, DicJSON, PlaylistJSON } from "./types";
+import { test, expect, APIRequestContext } from "@playwright/test";
+import { Dic } from "./types";
+import { DictationAPI } from "../utils/api-client";
 
 test.describe("Integrity tests", () => {
 
   test.describe.configure({ mode: 'default' });
 
-  let body: Body;
+  let apiContext: APIRequestContext;
   let dics: Dic[];
+  let api: DictationAPI;
 
-  test.beforeAll(async ({ request }) => {
-    // Step 1: Send GET request to the entry point URL
-    const response = await request.get(INDEX_FILE);
-
-    // Step 2: Parse the response body as JSON
-    body = await response.json() as Body;
-    dics = body.dics;
-    expect(Array.isArray(body.dics) && body.dics.length > 0).toBeTruthy();
+  test.beforeAll(async ({ playwright }) => {
+    apiContext = await playwright.request.newContext();
+    api = new DictationAPI(apiContext);
+    dics = await api.getDics();
   });
 
-  test("TC-DA-0005 — API: Sentence count and duration consistency between dic.json and playlist.json", async ({ request }) => {
+  test.afterAll(async ({ }) => {
+    await apiContext.dispose();
+  });
+
+  test("TC-DA-0005 — API: Sentence count and duration consistency between dic.json and playlist.json", async () => {
     for (const item of dics) {
-      const resDic = await request.get(`${item.id}/dic.json`);
-      const resPlaylist = await request.get(`${item.id}/playlist.json`);
-
-      expect(resDic.status()).toBe(200);
-      expect(resPlaylist.status()).toBe(200);
-
-      const dic = await resDic.json() as DicJSON;
-      const playlist = await resPlaylist.json() as PlaylistJSON;
+      const dic = await api.getDicJson(item.id);
+      const playlist = await api.getPlaylistJson(item.id);
 
       expect(dic.sentences === playlist.length, `${item.id}: sentence count mismatch`).toBeTruthy();
 
@@ -42,11 +37,9 @@ test.describe("Integrity tests", () => {
     }
   });
 
-  test("TC-DA-0008 — API: Index metadata should match dic.json", async ({ request }) => {
+  test("TC-DA-0008 — API: Index metadata should match dic.json", async () => {
     for (const item of dics) {
-      const resDic = await request.get(`${item.id}/dic.json`);
-      expect(resDic.status()).toBe(200);
-      const dic = await resDic.json() as DicJSON;
+      const dic = await api.getDicJson(item.id);
 
       expect(dic.id, `${item.id}: id mismatch`).toBe(item.id);
       expect(dic.title, `${item.title}: title mismatch`).toBe(item.title);
@@ -58,7 +51,7 @@ test.describe("Integrity tests", () => {
     }
   });
 
-  test("TC-DA-0011 — API: No duplicate dictation IDs in index", async ({ request }) => {
+  test("TC-DA-0011 — API: No duplicate dictation IDs in index", async () => {
     const uniqueIds = new Set(dics.map(el => el.id));
     expect(dics.length, `Duplicates dictations IDs found`).toBe(uniqueIds.size)
   });

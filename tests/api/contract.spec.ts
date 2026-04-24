@@ -1,32 +1,33 @@
-import { test, expect } from "@playwright/test";
-import { INDEX_FILE } from "./constants";
-import { Body, Dic, DicJSON, PlaylistJSON } from "./types";
+import { test, expect, APIRequestContext } from "@playwright/test";
+import { Body, Dic } from "./types";
+import { DictationAPI } from "../utils/api-client";
 
 test.describe("Contract tests", () => {
   test.describe.configure({ mode: 'default' });
 
-  let body: Body;
+  let apiContext: APIRequestContext;
   let dics: Dic[];
+  let body: Body;
+  let api: DictationAPI;
 
-  test.beforeAll(async({request}) => {
-    // Step 1: Send GET request to the entry point URL
-    const response = await request.get(INDEX_FILE);
-
-    // Step 2: Parse the response body as JSON
-    body = await response.json() as Body;
-    dics = body.dics;
-    expect(Array.isArray(body.dics) && body.dics.length > 0).toBeTruthy();
+  test.beforeAll(async ({ playwright }) => {
+    apiContext = await playwright.request.newContext();
+    api = new DictationAPI(apiContext);
+    body = await api.getIndex();
+    dics = await api.getDics();
   });
 
-  test("GET entry point returns status 200 and valid JSON", async ({
-    request,
-  }) => {
+  test.afterAll(async ({ }) => {
+    await apiContext.dispose();
+  });
+
+  test("GET entry point returns status 200 and valid JSON", async () => {
     expect('language' in body && typeof body.language === 'string' && body.language.length > 0).toBeTruthy();
     body?.repository && expect(typeof body.repository === 'string').toBeTruthy();
     expect(new Date(body.created_at.toString())).not.toBe('Invalid Date');
     expect(new Date(body.updated_at.toString())).not.toBe('Invalid Date');
 
-    for (const dic of body.dics) {
+    for (const dic of dics) {
       expect(typeof dic.id === 'string' && dic.id.length > 0).toBeTruthy();
       expect(typeof dic.title === 'string' && dic.title.length > 0).toBeTruthy();
       expect(typeof dic.level === 'string' && dic.level.length > 0).toBeTruthy();
@@ -38,12 +39,9 @@ test.describe("Contract tests", () => {
     }
   });
 
-  test("TC-DA-0003 — API: Validate individual dictation (dic.json) structure", async ({ request }) => {
+  test("TC-DA-0003 — API: Validate individual dictation (dic.json) structure", async () => {
     for (const item of dics) {
-      const res = await request.get(`${item.id}/dic.json`);
-      expect(res.status()).toBe(200);
-
-      const dic = await res.json() as DicJSON;
+      const dic = await api.getDicJson(item.id);
 
       expect(typeof dic.id, `${dic.id}: id should be string`).toBe('string');
       expect(typeof dic.title, `${dic.id}: title should be string`).toBe('string');
@@ -64,12 +62,10 @@ test.describe("Contract tests", () => {
     }
   });
 
-  test("TC-DA-0004 — API: Validate playlist.json structure for each dictation", async ({ request }) => {
+  test("TC-DA-0004 — API: Validate playlist.json structure for each dictation", async () => {
     for (const item of dics) {
-      const res = await request.get(`${item.id}/playlist.json`);
-      expect(res.status()).toBe(200);
+      const playlist = await api.getPlaylistJson(item.id);
 
-      const playlist = await res.json() as PlaylistJSON;
       expect(Array.isArray(playlist), `${item.id}: playlist should be an array`).toBeTruthy();
       expect(playlist.length > 0, `${item.id}: playlist should not be empty`).toBeTruthy();
 
