@@ -1,0 +1,67 @@
+name: Run API tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'API URL to test against'
+        required: false
+        default: 'https://leva13007.github.io/dictations_stage/dics/'
+        type: string
+      environment:
+        description: 'Environment label (for display only)'
+        required: false
+        default: 'stage'
+        type: choice
+        options:
+          - stage
+          - prod
+          - custom
+
+  # Allow other repos to trigger this workflow via repository_dispatch
+  repository_dispatch:
+    types: [run-tests]
+
+jobs:
+  test:
+    name: Playwright API tests (${{ github.event.inputs.environment || github.event.client_payload.environment || 'stage' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Resolve API URL
+        id: resolve_url
+        run: |
+          # workflow_dispatch takes priority, then repository_dispatch payload, then default
+          URL="${{ github.event.inputs.api_url || github.event.client_payload.api_url || 'https://leva13007.github.io/dictations_stage/dics/' }}"
+          echo "api_url=$URL" >> $GITHUB_OUTPUT
+          echo "Testing against: $URL"
+
+      - name: Run tests
+        env:
+          API_URL: ${{ steps.resolve_url.outputs.api_url }}
+          CI: true
+        run: yarn test
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.event.inputs.environment || github.event.client_payload.environment || 'stage' }}-${{ github.run_number }}
+          path: playwright-report/
+          retention-days: 30
