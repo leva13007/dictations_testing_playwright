@@ -25,7 +25,7 @@ test.describe("Content tests", () => {
       const playlist = await api.getPlaylistJson(item.id);
       for (const entry of playlist) {
         const contentType = (await api.getAudioHeader(`${item.id}/sounds/${entry.audio}`))['content-type'];
-        expect(contentType, `${item.id}: ${entry.id} content-type should be mp3 but got: ${contentType}`).toBe('audio/mp3');
+        expect(['audio/mp3', 'audio/mpeg'], `${item.id}: ${entry.id} content-type should be mp3 but got: ${contentType}`).toContain(contentType);
       }
     }
   });
